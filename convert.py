@@ -39,7 +39,7 @@ def createObjectPascalVocTree(xmin, ymin, xmax, ymax):
 
 def parseImFilename(imFilename, imPath):
     im = Image.open(os.path.join(imPath, imFilename))
-            
+
     folder, basename = imFilename.split('/')
     width, height = im.size
 
@@ -55,21 +55,23 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath):
                 folder, basename, path, width, height = parseImFilename(imFilename, imPath)
                 ann = createAnnotationPascalVocTree(folder, basename, os.path.join(imPath, path), width, height)
                 nbBndboxes = f.readline()
-                
+
                 i = 0
                 while i < int(nbBndboxes):
                     i = i + 1
                     x1, y1, w, h, _, _, _, _, _, _ = [int(i) for i in f.readline().split()]
+                    if w < 0 or h < 0:
+                        continue
 
                     ann.getroot().append(createObjectPascalVocTree(str(x1), str(y1), str(x1 + w), str(y1 + h)).getroot())
-                
+
                 if not os.path.exists(targetPath):
                      os.makedirs(targetPath)
                 annFilename = os.path.join(targetPath, basename.replace('.jpg','.xml'))
                 ann.write(annFilename)
                 print('{} => {}'.format(basename, annFilename))
             else:
-                break 
+                break
     f.close()
 
 
@@ -82,6 +84,5 @@ if __name__ == '__main__':
     PARSER.add_argument('-ip', '--images-path', help='the images directory path. ie:"./WIDER_train/images"')
 
     ARGS = vars(PARSER.parse_args())
-    
-    convertWFAnnotations(ARGS['annotations_path'], ARGS['target_path'], ARGS['images_path'])
 
+    convertWFAnnotations(ARGS['annotations_path'], ARGS['target_path'], ARGS['images_path'])
