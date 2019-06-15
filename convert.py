@@ -55,19 +55,21 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath):
                 folder, basename, path, width, height = parseImFilename(imFilename, imPath)
                 ann = createAnnotationPascalVocTree(folder, basename, os.path.join(imPath, path), width, height)
                 nbBndboxes = f.readline()
-                
-                i = 0
-                while i < int(nbBndboxes):
-                    i = i + 1
-                    x1, y1, w, h, _, _, _, _, _, _ = [int(i) for i in f.readline().split()]
+                if (int(nbBndboxes)>0):
+                    i = 0
+                    while i < int(nbBndboxes):
+                        i = i + 1
+                        x1, y1, w, h, _, _, _, _, _, _ = [int(i) for i in f.readline().split()]
 
-                    ann.getroot().append(createObjectPascalVocTree(str(x1), str(y1), str(x1 + w), str(y1 + h)).getroot())
+                        ann.getroot().append(createObjectPascalVocTree(str(x1), str(y1), str(x1 + w), str(y1 + h)).getroot())
                 
-                if not os.path.exists(targetPath):
-                     os.makedirs(targetPath)
-                annFilename = os.path.join(targetPath, basename.replace('.jpg','.xml'))
-                ann.write(annFilename)
-                print('{} => {}'.format(basename, annFilename))
+                    if not os.path.exists(targetPath):
+                         os.makedirs(targetPath)
+                    annFilename = os.path.join(targetPath, basename.replace('.jpg','.xml'))
+                    ann.write(annFilename)
+                    print('{} => {}'.format(basename, annFilename))
+                else:
+                    x1, y1, w, h, _, _, _, _, _, _ = f.readline().split()
             else:
                 break 
     f.close()
