@@ -52,6 +52,9 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath):
         while True:
             imFilename = f.readline().strip()
             if imFilename:
+                if not os.path.exists(os.path.join(imPath, imFilename)):
+                    print("File not found: {}".format(imFilename))
+                    continue
                 folder, basename, path, width, height = parseImFilename(imFilename, imPath)
                 ann = createAnnotationPascalVocTree(folder, basename, os.path.join(imPath, path), width, height)
                 nbBndboxes = f.readline()
