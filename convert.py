@@ -49,9 +49,12 @@ def parseImFilename(imFilename, imPath):
 def convertWFAnnotations(annotationsPath, targetPath, imPath, fixPath):
     ann = None
     basename = ''
+
     with open(annotationsPath) as f:
+        _line = 0
         while True:
             imFilename = f.readline().strip()
+            _line += 1
 
             '''
             discard err in name example:
@@ -92,13 +95,27 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath, fixPath):
                 folder, basename, path, width, height = parseImFilename(imFilename, imPath)
                 ann = createAnnotationPascalVocTree(folder, basename, os.path.join(fixPath, path), width, height)
                 nbBndboxes = f.readline()
+                _line += 1
 
                 i = 0
                 while i < int(nbBndboxes):
                     i = i + 1
                     x1, y1, w, h, _, _, _, _, _, _ = [int(i) for i in f.readline().split()]
 
-                    ann.getroot().append(createObjectPascalVocTree(str(x1), str(y1), str(x1 + w), str(y1 + h)).getroot())
+                    xmin = x1
+                    xmax = x1 + w
+                    ymin = y1
+                    ymax = y1 + h
+
+                    _line += 1
+
+                    if xmin == xmax or ymin == ymax:
+                        print("check {} -> {} line {}".format(
+                                    annotationsPath, imFilename,  _line))
+                        continue
+
+                    ann.getroot().append(createObjectPascalVocTree(
+                                            str(xmin), str(ymin), str(xmax), str(ymax)).getroot())
 
                 if not os.path.exists(targetPath):
                      os.makedirs(targetPath)
@@ -111,7 +128,7 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath, fixPath):
                             ET.tostring(ann.getroot())) \
                                     .toprettyxml(indent="   ").encode('utf-8')))
                 o.close()
-                print('{} => {}'.format(basename, annFilename))
+                # print('{} => {}'.format(basename, annFilename))
             else:
                 break
     f.close()
@@ -131,6 +148,7 @@ if __name__ == '__main__':
     if not ARGS['fix_images_path']:
         ARGS['fix_images_path'] = ARGS['images_path']
 
+    print()
     convertWFAnnotations(ARGS['annotations_path'],
                             ARGS['target_path'],
                             ARGS['images_path'],
