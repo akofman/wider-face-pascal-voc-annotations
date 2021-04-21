@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 from PIL import Image
 import os
 
@@ -39,13 +40,13 @@ def createObjectPascalVocTree(xmin, ymin, xmax, ymax):
 
 def parseImFilename(imFilename, imPath):
     im = Image.open(os.path.join(imPath, imFilename))
-            
+
     folder, basename = imFilename.split('/')
     width, height = im.size
 
     return folder, basename, imFilename, str(width), str(height)
 
-def convertWFAnnotations(annotationsPath, targetPath, imPath):
+def convertWFAnnotations(annotationsPath, targetPath, imPath, fixPath):
     ann = None
     basename = ''
     with open(annotationsPath) as f:
@@ -53,23 +54,30 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath):
             imFilename = f.readline().strip()
             if imFilename:
                 folder, basename, path, width, height = parseImFilename(imFilename, imPath)
-                ann = createAnnotationPascalVocTree(folder, basename, os.path.join(imPath, path), width, height)
+                ann = createAnnotationPascalVocTree(folder, basename, os.path.join(fixPath, path), width, height)
                 nbBndboxes = f.readline()
-                
+
                 i = 0
                 while i < int(nbBndboxes):
                     i = i + 1
                     x1, y1, w, h, _, _, _, _, _, _ = [int(i) for i in f.readline().split()]
 
                     ann.getroot().append(createObjectPascalVocTree(str(x1), str(y1), str(x1 + w), str(y1 + h)).getroot())
-                
+
                 if not os.path.exists(targetPath):
                      os.makedirs(targetPath)
                 annFilename = os.path.join(targetPath, basename.replace('.jpg','.xml'))
-                ann.write(annFilename)
+
+                # pretty annotation
+                o = open(annFilename, 'wb')
+                o.write(bytes(
+                        minidom.parseString(
+                            ET.tostring(ann.getroot())) \
+                                    .toprettyxml(indent="   ").encode('utf-8')))
+                o.close()
                 print('{} => {}'.format(basename, annFilename))
             else:
-                break 
+                break
     f.close()
 
 
@@ -80,8 +88,15 @@ if __name__ == '__main__':
     PARSER.add_argument('-ap', '--annotations-path', help='the annotations file path. ie:"./wider_face_split/wider_face_train_bbx_gt.txt".')
     PARSER.add_argument('-tp', '--target-path', help='the target directory path where XML files will be copied.')
     PARSER.add_argument('-ip', '--images-path', help='the images directory path. ie:"./WIDER_train/images"')
+    PARSER.add_argument('-fp', '--fix-images-path', help='annotation base path replace')
 
     ARGS = vars(PARSER.parse_args())
-    
-    convertWFAnnotations(ARGS['annotations_path'], ARGS['target_path'], ARGS['images_path'])
+
+    if not ARGS['fix_images_path']:
+        ARGS['fix_images_path'] = ARGS['images_path']
+
+    convertWFAnnotations(ARGS['annotations_path'],
+                            ARGS['target_path'],
+                            ARGS['images_path'],
+                            ARGS['fix_images_path'])
 

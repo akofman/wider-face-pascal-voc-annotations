@@ -23,8 +23,13 @@ optional arguments:
 It has been used as following:
 
 ```
-$ ./convert.py -ap ./wider_face_split/wider_face_train_bbx_gt.txt -tp ./WIDER_train_annotations/ -ip ./WIDER_train/images/
-$ ./convert.py -ap ./wider_face_split/wider_face_val_bbx_gt.txt -tp ./WIDER_val_annotations/ -ip ./WIDER_val/images/
+$ ./convert.py -ap ./wider_face_split/wider_face_train_bbx_gt.txt \
+			-tp ./WIDER_train_annotations/ \
+			-ip ./WIDER_train/images/
+
+$ ./convert.py -ap ./wider_face_split/wider_face_val_bbx_gt.txt \
+			-tp ./WIDER_val_annotations/ \
+			-ip ./WIDER_val/images/
 ```
 
 # License
