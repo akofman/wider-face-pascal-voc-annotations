@@ -52,6 +52,42 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath, fixPath):
     with open(annotationsPath) as f:
         while True:
             imFilename = f.readline().strip()
+
+            '''
+            discard err in name example:
+                dataset/train/0 0 0 0 0 0 0 0 0 0
+
+            in file:
+
+                0--Parade/0_Parade_Parade_0_1040.jpg
+                1
+                494 251 75 110 0 0 0 0 2 0
+                0--Parade/0_Parade_Parade_0_452.jpg
+                0
+                0 0 0 0 0 0 0 0 0 0                      <-- Fix Error
+                0--Parade/0_Parade_Parade_0_630.jpg
+                17
+                20 186 14 20 1 0 0 0 0 0
+                94 162 31 49 0 0 0 0 0 0
+                119 181 14 17 2 0 0 0 2 0
+                190 142 25 38 1 0 1 0 0 0
+                375 129 46 62 0 0 0 0 0 0
+                150 163 19 25 0 0 0 0 1 0
+                349 122 26 38 0 0 0 0 0 0
+                458 150 31 42 0 0 0 0 0 0
+                527 174 10 16 1 0 0 0 0 0
+                560 131 25 39 0 0 0 0 0 0
+                695 143 49 64 0 0 0 0 0 0
+                742 164 10 14 2 0 0 0 2 0
+                822 138 29 38 0 0 0 0 2 0
+                890 140 23 48 0 0 0 0 0 1
+                954 156 12 18 1 0 0 0 0 0
+                988 209 16 17 1 0 0 0 0 0
+                615 143 22 24 1 0 0 0 2 0
+            '''
+            if len(imFilename.split(' ')) > 1:
+                continue
+
             if imFilename:
                 folder, basename, path, width, height = parseImFilename(imFilename, imPath)
                 ann = createAnnotationPascalVocTree(folder, basename, os.path.join(fixPath, path), width, height)
