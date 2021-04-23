@@ -39,9 +39,13 @@ def createObjectPascalVocTree(xmin, ymin, xmax, ymax):
     return ET.ElementTree(obj)
 
 def parseImFilename(imFilename, imPath):
-    im = Image.open(os.path.join(imPath, imFilename))
 
     folder, basename = imFilename.split('/')
+    if not os.path.exists(os.path.join(imPath, imFilename)):
+        return folder, basename, imFilename, '0', '0'
+
+    im = Image.open(os.path.join(imPath, imFilename))
+
     width, height = im.size
 
     return folder, basename, imFilename, str(width), str(height)
@@ -92,7 +96,9 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath, fixPath):
                 continue
 
             if imFilename:
+
                 folder, basename, path, width, height = parseImFilename(imFilename, imPath)
+
                 ann = createAnnotationPascalVocTree(folder, basename, os.path.join(fixPath, path), width, height)
                 nbBndboxes = f.readline()
                 _line += 1
@@ -102,14 +108,15 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath, fixPath):
                     i = i + 1
                     x1, y1, w, h, _, _, _, _, _, _ = [int(i) for i in f.readline().split()]
 
+                    _line += 1
+
                     xmin = x1
                     xmax = x1 + w
                     ymin = y1
                     ymax = y1 + h
 
-                    _line += 1
-
-                    if xmin == xmax or ymin == ymax:
+                    if xmin == xmax or ymin == ymax or \
+                            (width == '0' and height == '0'):
                         print("check {} -> {} line {}".format(
                                     annotationsPath, imFilename,  _line))
                         continue
@@ -122,12 +129,13 @@ def convertWFAnnotations(annotationsPath, targetPath, imPath, fixPath):
                 annFilename = os.path.join(targetPath, basename.replace('.jpg','.xml'))
 
                 # pretty annotation
-                o = open(annFilename, 'wb')
-                o.write(bytes(
-                        minidom.parseString(
-                            ET.tostring(ann.getroot())) \
-                                    .toprettyxml(indent="   ").encode('utf-8')))
-                o.close()
+                if width != '0' and height != '0':
+                    o = open(annFilename, 'wb')
+                    o.write(bytes(
+                            minidom.parseString(
+                                ET.tostring(ann.getroot())) \
+                                        .toprettyxml(indent="   ").encode('utf-8')))
+                    o.close()
                 # print('{} => {}'.format(basename, annFilename))
             else:
                 break
